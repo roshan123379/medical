@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const cors = require("cors")
 const port = process.env.PORT
 const corOptions = {
-    origin:"https://luminous-pixie-df1000.netlify.app",
+    origin:"https://mediglow.netlify.app/",
     methods:"GET ,POST ,PUT ,DELETE,PATCH",
     Credential:true
 
