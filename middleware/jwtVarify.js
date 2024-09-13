@@ -12,9 +12,10 @@ const jwtVarification = async(req,res,next)=>{
         const jwtVarify = jwt.verify(jwtToken,process.env.SECRET)
         console.log(jwtVarify)
 
-        const userDetails =await registerModel.findOne({email:jwtVarify.email}).select({password:0})
+        const userDetails =await registerModel.findOne({email:jwtVarify.email})
         console.log(userDetails)
         req.user = userDetails
+        req.id = userDetails._id
 
         next()
     } catch (error) {

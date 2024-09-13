@@ -65,8 +65,10 @@ const service = async (req, res) => {
 const userData = async (req, res) => {
     try {
         const Data = req.user
-        console.log(Data)
+        console.log(Data._id)
+        req.id = Data._id
         res.status(200).send({ Data })
+       
     } catch (error) {
         console.log("user Data error", error)
         res.status(400).send({msg:"user data error"})
@@ -87,5 +89,32 @@ const contact = async (req, res) => {
 
     }
 }
-
-module.exports = { home, register, login, service, userData,contact }
+const updatePassById = async(req,res)=>{
+    try {
+       
+        const user = req.user
+       
+        const id  = user._id
+        const {password }= req.body
+        const hashPassword = await bcrypt.hash(password, 10)
+        const updatedPass = await registerModel.updateOne({_id:id},{$set:{password:hashPassword}})
+       
+        return res.status(200).json(updatedPass)
+    } catch (error) {
+        console.log("update pass ",error)
+    }
+}
+const updateAddress = async(req,res)=>{
+    try {
+        const user = req.user
+        const id = user._id
+        const {addressLine1,addressLine2,addressLine3,addressLine4,addressLine5,addressLine6,addressLine7} = req.body
+        const updateAddress = await registerModel.updateOne({_id:id},{$set:{addressLine1:addressLine1,addressLine2:addressLine2,addressLine3:addressLine3,addressLine4:addressLine4,addressLine5:addressLine5,addressLine6:addressLine6,addressLine7:addressLine7}})
+        
+        
+        return res.status(200).json(updateAddress)
+    } catch (error) {
+        console.log("address update error",error)
+    }
+}
+module.exports = { home, register, login, service, userData,contact,updatePassById,updateAddress }

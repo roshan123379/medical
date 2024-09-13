@@ -18,7 +18,42 @@ const registerSchema = new mongoose.Schema({
     isAdmin:{
         type:Boolean,
         default:false
+    },
+    addressLine1:{
+        type:String,
+        default:"Please Add the Address"
+        
+    },
+    addressLine2:{
+        type:String,
+        default:""
+    },
+    addressLine3:{
+        type:String,
+        default:""
+    },
+
+    addressLine4:{
+        type:String,
+        default:""
+    },
+
+    addressLine5:{
+        type:Number,
+        default:""
+    },
+
+    addressLine6:{
+        type:String,
+        default:""
+    },
+
+    addressLine7:{
+        type:Number,
+        default:""
     }
+
+    
 })
 
 registerSchema.methods.generateToken=async function(){
