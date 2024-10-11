@@ -2,6 +2,7 @@ const registerModel = require("../models/register")
 const serviceModel = require("../models/service")
 const contactModel =require("../models/contact-model")
 const bcrypt = require("bcryptjs")
+const orderModel = require("../models/order")
 const home = async (req, res) => {
     res.send("hello api home")
 }
@@ -117,4 +118,20 @@ const updateAddress = async(req,res)=>{
         console.log("address update error",error)
     }
 }
-module.exports = { home, register, login, service, userData,contact,updatePassById,updateAddress }
+
+const order = async (req, res)=>{
+    const {items} = req.body
+
+    const orderData = await orderModel.create({items})
+    if(orderData){
+        res.status(200).json({msg:"order send success"})
+    }
+}
+const getOrderData = async (req,res)=>{
+    const orderDatas = await orderModel.find()
+    const reverseOrderDatas = await orderDatas.reverse()
+    if(orderDatas){
+        res.status(200).json({reverseOrderDatas})
+    }
+}
+module.exports = { home, register, login, service, userData,contact,updatePassById,updateAddress ,order,getOrderData }
