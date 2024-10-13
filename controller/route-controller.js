@@ -1,6 +1,6 @@
 const registerModel = require("../models/register")
 const serviceModel = require("../models/service")
-const contactModel =require("../models/contact-model")
+const contactModel = require("../models/contact-model")
 const bcrypt = require("bcryptjs")
 const orderModel = require("../models/order")
 const home = async (req, res) => {
@@ -52,7 +52,7 @@ const login = async (req, res) => {
 const service = async (req, res) => {
     try {
         const serviceData = await serviceModel.find()
-        console.log(serviceData)
+        
         res.status(200).send({ msg: serviceData })
         if (!serviceData) {
             res.status(400).send({ msg: "data not found" })
@@ -69,10 +69,10 @@ const userData = async (req, res) => {
         console.log(Data._id)
         req.id = Data._id
         res.status(200).send({ Data })
-       
+
     } catch (error) {
         console.log("user Data error", error)
-        res.status(400).send({msg:"user data error"})
+        res.status(400).send({ msg: "user data error" })
     }
 
 }
@@ -90,48 +90,96 @@ const contact = async (req, res) => {
 
     }
 }
-const updatePassById = async(req,res)=>{
+const updatePassById = async (req, res) => {
     try {
-       
+
         const user = req.user
-       
-        const id  = user._id
-        const {password }= req.body
+
+        const id = user._id
+        const { password } = req.body
         const hashPassword = await bcrypt.hash(password, 10)
-        const updatedPass = await registerModel.updateOne({_id:id},{$set:{password:hashPassword}})
-       
+        const updatedPass = await registerModel.updateOne({ _id: id }, { $set: { password: hashPassword } })
+
         return res.status(200).json(updatedPass)
     } catch (error) {
-        console.log("update pass ",error)
+        console.log("update pass ", error)
     }
 }
-const updateAddress = async(req,res)=>{
+const updateAddress = async (req, res) => {
     try {
         const user = req.user
         const id = user._id
-        const {addressLine1,addressLine2,addressLine3,addressLine4,addressLine5,addressLine6,addressLine7} = req.body
-        const updateAddress = await registerModel.updateOne({_id:id},{$set:{addressLine1:addressLine1,addressLine2:addressLine2,addressLine3:addressLine3,addressLine4:addressLine4,addressLine5:addressLine5,addressLine6:addressLine6,addressLine7:addressLine7}})
-        
-        
+        const { addressLine1, addressLine2, addressLine3, addressLine4, addressLine5, addressLine6, addressLine7 } = req.body
+        const updateAddress = await registerModel.updateOne({ _id: id }, { $set: { addressLine1: addressLine1, addressLine2: addressLine2, addressLine3: addressLine3, addressLine4: addressLine4, addressLine5: addressLine5, addressLine6: addressLine6, addressLine7: addressLine7 } })
+
+
         return res.status(200).json(updateAddress)
     } catch (error) {
-        console.log("address update error",error)
+        console.log("address update error", error)
     }
 }
 
-const order = async (req, res)=>{
-    const {items} = req.body
+const order = async (req, res) => {
+    const { items } = req.body
 
-    const orderData = await orderModel.create({items})
-    if(orderData){
-        res.status(200).json({msg:"order send success"})
+    const orderData = await orderModel.create({ items })
+    if (orderData) {
+        res.status(200).json({ msg: "order send success" })
     }
 }
-const getOrderData = async (req,res)=>{
+const getOrderData = async (req, res) => {
     const orderDatas = await orderModel.find()
     const reverseOrderDatas = await orderDatas.reverse()
-    if(orderDatas){
-        res.status(200).json({reverseOrderDatas})
+    if (orderDatas) {
+        res.status(200).json({ reverseOrderDatas })
     }
 }
-module.exports = { home, register, login, service, userData,contact,updatePassById,updateAddress ,order,getOrderData }
+
+const otpArray = []
+
+const otp = async (req, res) => {
+    const { email } = req.body;
+
+    const user = await registerModel.findOne({ email });
+  
+    if (user) {
+        let otp = "";
+        for (let i = 0; i < 6; i++) {
+            otp += Math.floor(Math.random() * 10);
+        }
+
+        otpArray.unshift(otp)
+       
+        
+        
+        return res.status(200).json({ msg: "OTP generated successfully", email: email,otp:otp });
+    } else {
+        return res.status(400).json({ msg: "User not found for password" });
+    }
+};
+
+
+const otpVerify = (req, res) => {
+    const { otp: userOtp } = req.body; 
+    const generatedOtp = otpArray[0];
+
+    if (userOtp === generatedOtp) {
+        return res.status(200).json({ msg: "OTP verified successfully" });
+    } else {
+        return res.status(400).json({ msg: "Invalid OTP" });
+    }
+};
+
+const forgetPassword = async (req, res) => {
+    try {
+        const {email,password} = req.body
+        
+        const hashPassword = await bcrypt.hash(password, 10)
+        const updatedPass = await registerModel.updateOne({email: email }, { $set: { password: hashPassword } })
+
+        return res.status(200).json(updatedPass)
+    } catch (error) {
+        console.log("update pass ", error)
+    }
+}
+module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword}
