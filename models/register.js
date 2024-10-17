@@ -1,9 +1,15 @@
 const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken")
-const secret = "ROSHANYOUAREAWESOME"
+
 
 const registerSchema = new mongoose.Schema({
-    username: {
+    sub:{
+        type:String,
+    },
+    picture:{
+        type:String
+    },
+    name: {
         type: String,
         required: true
     },
@@ -13,7 +19,7 @@ const registerSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        
     },
     isAdmin: {
         type: Boolean,
@@ -84,7 +90,7 @@ registerSchema.methods.generateToken = async function () {
             email: this.email,
             isAdmin: this.isAdmin
 
-        }, secret, {
+        }, process.env.SECRET, {
             expiresIn: "30d"
         })
     } catch (error) {

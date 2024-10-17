@@ -2,21 +2,24 @@ const registerModel = require("../models/register")
 const serviceModel = require("../models/service")
 const contactModel = require("../models/contact-model")
 const bcrypt = require("bcryptjs")
+const { OAuth2Client } = require('google-auth-library');
 
 const home = async (req, res) => {
     res.send("hello api home")
 }
 const register = async (req, res) => {
+   
     try {
-        const { username, email, password } = req.body
+        const { name, email, password } = req.body
         const userExist = await registerModel.findOne({ email })
         if (userExist) {
-            res.status(400).send({ msg: "user already exist" })
+            return res.status(400).send({ msg: "User already exists" });
         }
+        
         const hashPassword = await bcrypt.hash(password, 10)
-        const userCreate = await registerModel.create({ username, email, password: hashPassword })
+        const userCreate = await registerModel.create({ name, email, password: hashPassword })
         if (userCreate) {
-            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString() })
+            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString() ,name:userCreate.name,email:userCreate.email})
         }
     } catch (error) {
         console.log("register error", error)
@@ -30,14 +33,13 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body
         const userExists = await registerModel.findOne({ email })
-        console.log(userExists)
         if (!userExists) {
             res.status(400).send({ msg: "please register first" })
         }
         if (userExists) {
             const comparePasword = await bcrypt.compare(password, userExists.password)
             if (comparePasword) {
-                res.status(200).json({ msg: "you are successfully login into my website", Token: await userExists.generateToken(), userId: userExists._id.toString() })
+                res.status(200).json({ msg: "you are successfully login into my website", Token: await userExists.generateToken(), userId: userExists._id.toString(),name:userExists.name ,email:userExists.email })
             }
 
         }
@@ -48,7 +50,43 @@ const login = async (req, res) => {
 
 
 }
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
+const GoogleLogin = async(req,res)=>{
+    const {token} = req.body
+
+    try {
+        const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+    
+        const payload = ticket.getPayload();
+        const {sub, email, name ,picture} = payload;
+    
+        const userExist = await registerModel.findOne({ email })
+        if (userExist) {
+            res.status(200).send({ msg: "Login successfully", Token: await userExist.generateToken(), userId: userExist._id.toString() ,name:userExist.name,email:userExist.email})
+        }
+        if(!userExist){
+        const userCreate = await registerModel.create({sub, name, email,picture  })
+        if (userCreate) {
+            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString() ,name:userCreate.name,email:userCreate.email})
+        }
+    
+    
+    }
+      } catch (error) {
+        res.status(400).json({ success: false, message: 'Invalid Token', error });
+      }
+  
+      
+}
+
+const clientId = (req, res)=>{
+
+    res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID });
+}
 const service = async (req, res) => {
     try {
         const serviceData = await serviceModel.find()
@@ -66,8 +104,6 @@ const service = async (req, res) => {
 const userData = async (req, res) => {
     try {
         const Data = req.user
-        console.log(Data._id)
-        req.id = Data._id
         res.status(200).send({ Data })
 
     } catch (error) {
@@ -78,9 +114,9 @@ const userData = async (req, res) => {
 }
 const contact = async (req, res) => {
     try {
-        const { username, email, message } = req.body
+        const { name, email, message } = req.body
 
-        await contactModel.create({ username, email, message })
+        await contactModel.create({ name, email, message })
 
         return res.status(200).json({ msg: "contact submitted" })
 
@@ -206,4 +242,4 @@ const forgetPassword = async (req, res) => {
         console.log("update pass ", error)
     }
 }
-module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword}
+module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword,GoogleLogin , clientId}

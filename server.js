@@ -14,7 +14,8 @@ const corOptions = {
 }
 app.use(cors(corOptions))
 app.use(bodyParser.urlencoded({ extended: false }))
- 
+
+  
 app.use(bodyParser.json())
 const db = require("./utils/db")
 const router = require("./router/router")

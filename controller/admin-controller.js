@@ -17,7 +17,6 @@ const adminUsers = async (req, res) => {
 const deleteUserById = async (req, res) => {
     try {
         const id = req.params.id;
-        console.log("id", id)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "Invalid user ID" });
         }
@@ -30,8 +29,6 @@ const deleteUserById = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const id = req.params.id;
-        console.log("id", id)
-
         const editUserData = await registerModel.findOne({ _id: id }, { password: 0 });
         return res.status(200).json(editUserData)
     } catch (error) {

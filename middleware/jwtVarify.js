@@ -5,22 +5,27 @@ const jwtVarification = async(req,res,next)=>{
     if(!token){
         res.status(400).send({msg:"token not found"})
     }
-    const jwtToken = token.replace("Bearer","").trim()
-    console.log(jwtToken)
+    
+    if(token){
+        try {
+        
+            const jwtToken = token.replace("Bearer","").trim()
+            const jwtVarify = jwt.verify(jwtToken,process.env.SECRET)
+            const userDetails =await registerModel.findOne({email:jwtVarify.email})
+          
+            req.user = userDetails
+            req.id = userDetails._id
+    
+            next()
+            
+        } catch (error) {
+            res.status(400).send({"jwt varification error":error})
+        }
 
-    try {
-        const jwtVarify = jwt.verify(jwtToken,process.env.SECRET)
-        console.log(jwtVarify)
-
-        const userDetails =await registerModel.findOne({email:jwtVarify.email})
-        console.log(userDetails)
-        req.user = userDetails
-        req.id = userDetails._id
-
-        next()
-    } catch (error) {
-        console.log("jwt varification error",error)
     }
+    
+
+    
 }
 
 module.exports = jwtVarification
