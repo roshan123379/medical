@@ -9,10 +9,15 @@ const serviceSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    img:{
-        type:String,
-        required:true
-    },
+    img:[
+        {
+            img:{
+                type:String
+            }
+        }
+        
+
+    ],
     price:{
         type:String,
         required:true
@@ -20,7 +25,11 @@ const serviceSchema = new mongoose.Schema({
     piece:{
         type:Number,
         required:true
+    },
+    category:{
+        type:String
     }
+
 })
 
 const serviceModel = new mongoose.model("item",serviceSchema)

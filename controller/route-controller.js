@@ -242,4 +242,15 @@ const forgetPassword = async (req, res) => {
         console.log("update pass ", error)
     }
 }
-module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword,GoogleLogin , clientId}
+
+const productInfo = async(req,res)=>{
+    try {
+        const id = req.body
+        const productInfo = await serviceModel.findOne({_id:id})
+        res.status(200).json({productInfo})
+    } catch (error) {
+        console.log("product info error ", error)
+        
+    }
+}
+module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword,GoogleLogin , clientId,productInfo}
