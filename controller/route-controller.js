@@ -8,18 +8,18 @@ const home = async (req, res) => {
     res.send("hello api home")
 }
 const register = async (req, res) => {
-   
+
     try {
         const { name, email, password } = req.body
         const userExist = await registerModel.findOne({ email })
         if (userExist) {
             return res.status(400).send({ msg: "User already exists" });
         }
-        
+
         const hashPassword = await bcrypt.hash(password, 10)
         const userCreate = await registerModel.create({ name, email, password: hashPassword })
         if (userCreate) {
-            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString() ,name:userCreate.name,email:userCreate.email})
+            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString(), name: userCreate.name, email: userCreate.email })
         }
     } catch (error) {
         console.log("register error", error)
@@ -39,7 +39,7 @@ const login = async (req, res) => {
         if (userExists) {
             const comparePasword = await bcrypt.compare(password, userExists.password)
             if (comparePasword) {
-                res.status(200).json({ msg: "you are successfully login into my website", Token: await userExists.generateToken(), userId: userExists._id.toString(),name:userExists.name ,email:userExists.email })
+                res.status(200).json({ msg: "you are successfully login into my website", Token: await userExists.generateToken(), userId: userExists._id.toString(), name: userExists.name, email: userExists.email })
             }
 
         }
@@ -52,54 +52,91 @@ const login = async (req, res) => {
 }
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-const GoogleLogin = async(req,res)=>{
-    const {token} = req.body
+const GoogleLogin = async (req, res) => {
+    const { token } = req.body
 
     try {
         const ticket = await client.verifyIdToken({
-          idToken: token,
-          audience: process.env.GOOGLE_CLIENT_ID,
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
-    
+
         const payload = ticket.getPayload();
-        const {sub, email, name ,picture} = payload;
-    
+        const { sub, email, name, picture } = payload;
+
         const userExist = await registerModel.findOne({ email })
         if (userExist) {
-            res.status(200).send({ msg: "Login successfully", Token: await userExist.generateToken(), userId: userExist._id.toString() ,name:userExist.name,email:userExist.email})
+            res.status(200).send({ msg: "Login successfully", Token: await userExist.generateToken(), userId: userExist._id.toString(), name: userExist.name, email: userExist.email })
         }
-        if(!userExist){
-        const userCreate = await registerModel.create({sub, name, email,picture  })
-        if (userCreate) {
-            res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString() ,name:userCreate.name,email:userCreate.email})
+        if (!userExist) {
+            const userCreate = await registerModel.create({ sub, name, email, picture })
+            if (userCreate) {
+                res.status(200).send({ msg: "user created successfully", Token: await userCreate.generateToken(), userId: userCreate._id.toString(), name: userCreate.name, email: userCreate.email })
+            }
+
+
         }
-    
-    
-    }
-      } catch (error) {
+    } catch (error) {
         res.status(400).json({ success: false, message: 'Invalid Token', error });
-      }
-  
-      
+    }
+
+
 }
 
-const clientId = (req, res)=>{
+const clientId = (req, res) => {
 
     res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID });
 }
+
 const service = async (req, res) => {
     try {
-        const serviceData = await serviceModel.find()
-        
-        res.status(200).send({ msg: serviceData })
-        if (!serviceData) {
-            res.status(400).send({ msg: "data not found" })
-        }
-    } catch (error) {
-        console.log("service error", error)
-    }
+        const { categories } = req.body;
 
-}
+        const serviceData = await serviceModel.aggregate([
+            {
+                $match: {
+                    category: { $in: categories.map(cat => new RegExp(cat, 'i')) }
+                }
+            }
+        ]);
+
+        if (serviceData.length === 0) {
+            return res.status(404).send({ msg: "No data found" });
+        }
+        res.status(200).send({
+            msg: serviceData,
+        });
+    } catch (error) {
+        console.log("service error", error);
+        res.status(500).send({ msg: "Server error" });
+    }
+};
+const service2 = async (req, res) => {
+    try {
+        const { category, name } = req.body;
+
+        const serviceData = await serviceModel.find({
+            $or: [
+                { "category": { $regex: category, $options: "i" } },
+                { "name": { $regex: name, $options: "i" } }
+            ]
+        });
+
+        if (serviceData.length === 0) {
+            return res.status(404).send({ msg: "No data found" });
+        }
+        res.status(200).send({
+            msg: serviceData,
+        });
+    } catch (error) {
+        console.log("service error", error);
+        res.status(500).send({ msg: "Server error" });
+    }
+};
+
+
+
+
 
 const userData = async (req, res) => {
     try {
@@ -166,9 +203,9 @@ const order = async (req, res) => {
             { $push: { orders: { $each: orders } } }
         );
 
-        if (orderData.modifiedCount > 0 ) {
+        if (orderData.modifiedCount > 0) {
             res.status(200).json({ msg: "Order updated successfully" });
-        
+
         } else {
             res.status(400).json({ msg: "Failed to find the order to update." });
         }
@@ -179,14 +216,14 @@ const order = async (req, res) => {
 
 const getOrderData = async (req, res) => {
     try {
-        const user = req.user; 
+        const user = req.user;
         const id = user._id;
 
-        const orderData = await registerModel.findById(id, 'orders'); 
+        const orderData = await registerModel.findById(id, 'orders');
 
         if (orderData && orderData.orders.length > 0) {
             const reverseOrderDatas = orderData.orders.reverse(); +
-            res.status(200).json({ reverseOrderDatas });
+                res.status(200).json({ reverseOrderDatas });
         } else {
             res.status(404).json({ msg: "No orders found for this user" });
         }
@@ -201,7 +238,7 @@ const otp = async (req, res) => {
     const { email } = req.body;
 
     const user = await registerModel.findOne({ email });
-  
+
     if (user) {
         let otp = "";
         for (let i = 0; i < 6; i++) {
@@ -209,10 +246,10 @@ const otp = async (req, res) => {
         }
 
         otpArray.unshift(otp)
-       
-        
-        
-        return res.status(200).json({ msg: "OTP generated successfully", email: email,otp:otp });
+
+
+
+        return res.status(200).json({ msg: "OTP generated successfully", email: email, otp: otp });
     } else {
         return res.status(400).json({ msg: "User not found for password" });
     }
@@ -220,7 +257,7 @@ const otp = async (req, res) => {
 
 
 const otpVerify = (req, res) => {
-    const { otp: userOtp } = req.body; 
+    const { otp: userOtp } = req.body;
     const generatedOtp = otpArray[0];
 
     if (userOtp === generatedOtp) {
@@ -232,10 +269,10 @@ const otpVerify = (req, res) => {
 
 const forgetPassword = async (req, res) => {
     try {
-        const {email,password} = req.body
-        
+        const { email, password } = req.body
+
         const hashPassword = await bcrypt.hash(password, 10)
-        const updatedPass = await registerModel.updateOne({email: email }, { $set: { password: hashPassword } })
+        const updatedPass = await registerModel.updateOne({ email: email }, { $set: { password: hashPassword } })
 
         return res.status(200).json(updatedPass)
     } catch (error) {
@@ -243,14 +280,14 @@ const forgetPassword = async (req, res) => {
     }
 }
 
-const productInfo = async(req,res)=>{
+const productInfo = async (req, res) => {
     try {
         const id = req.body
-        const productInfo = await serviceModel.findOne({_id:id})
-        res.status(200).json({productInfo})
+        const productInfo = await serviceModel.findOne({ _id: id })
+        res.status(200).json({ productInfo })
     } catch (error) {
         console.log("product info error ", error)
-        
+
     }
 }
-module.exports = { home, register, login, service, userData, contact, updatePassById, updateAddress, order, getOrderData  ,otp,otpVerify,forgetPassword,GoogleLogin , clientId,productInfo}
+module.exports = { home, register, login, service,service2, userData, contact, updatePassById, updateAddress, order, getOrderData, otp, otpVerify, forgetPassword, GoogleLogin, clientId, productInfo }

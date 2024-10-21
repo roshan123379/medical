@@ -1,13 +1,14 @@
 const express = require("express")
 const router = express.Router()
 
-const {home,register,login,service,userData,contact, updatePassById,updateAddress,order,getOrderData ,otp, otpVerify,forgetPassword, GoogleLogin,clientId,productInfo} = require("../controller/route-controller")
+const {home,register,login,service,service2,userData,contact, updatePassById,updateAddress,order,getOrderData ,otp, otpVerify,forgetPassword, GoogleLogin,clientId,productInfo} = require("../controller/route-controller")
 const jwtVarification = require("../middleware/jwtVarify")
 
 router.route("/").get(home)
 router.route("/register").post(register)
 router.route("/login").post(login)
-router.route("/service").get(service)
+router.route("/service").post(service)
+router.route("/service2").post(service2)
 router.route("/userData").get(jwtVarification,userData)
 router.route("/contact").post(contact)
 router.route("/profile/password").patch(jwtVarification,updatePassById)
