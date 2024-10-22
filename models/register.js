@@ -78,6 +78,10 @@ const registerSchema = new mongoose.Schema({
         "img": {
             type: String,
             default:""
+        },
+        "piece":{
+            type:String
+    
         }
     }]
 
