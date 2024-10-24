@@ -82,8 +82,15 @@ const registerSchema = new mongoose.Schema({
         "piece":{
             type:String
     
+        },
+        "deliverySlot":{
+            type:String
+        },
+        "charges":{
+            type:Number
         }
-    }]
+    }],
+    
 
 })
 
